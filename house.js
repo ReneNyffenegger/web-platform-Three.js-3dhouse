@@ -6,6 +6,16 @@
 //               view as well as a first-person point of view
 //============================================================================
 
+import * as THREE from 'three';
+// import { OrbitControls       } from "three/examples/jsm/controls/OrbitControls"
+// import { OrbitControls       } from "three/addons/jsm/controls/OrbitControls.js"
+   import { OrbitControls       } from 'three/addons/controls/OrbitControls.js';
+import { OBJLoader           } from 'three/addons/loaders/OBJLoader.js';
+// import { MTLLoader           } from 'three-obj-mtl-laoder';
+// import { MTLLoader           } from 'three/addons/jsm/loaders/MTLLoader.js';
+import { MTLLoader           } from 'three/addons/loaders/MTLLoader.js';
+import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
+// , OBJLoader} from 'three-obj-mtl-loader'
 
 // Global variables
 var RENDER_WIDTH = window.innerWidth, RENDER_HEIGHT = window.innerHeight;
@@ -55,7 +65,7 @@ function init()
 	camera.position.z = -20;
 	scene.add(camera);
 	// set default controller to orbit
-	controls = new THREE.OrbitControls(camera, renderer.domElement);
+	controls = new OrbitControls(camera, renderer.domElement);
 	// add window resize controller
 	window.addEventListener( 'resize', onWindowResize, false );
 	
@@ -66,11 +76,14 @@ function init()
 	var skyGeometry = new THREE.BoxGeometry( 600, 400, 600 );	
 	var materialArray = [];
 	for (var i = 0; i < 6; i++)
-		materialArray.push( new THREE.MeshBasicMaterial({
-			map: THREE.ImageUtils.loadTexture( imagePrefix + directions[i] + imageSuffix ),
+		//materialArray.push( new THREE.MeshBasicMaterial({
+		  materialArray.push( new THREE.MeshStandardMaterial({
+			//map: THREE.ImageUtils.loadTexture( imagePrefix + directions[i] + imageSuffix ),
+			  map: new THREE.TextureLoader().load( imagePrefix + directions[i] + imageSuffix ),
 			side: THREE.BackSide
 		}));
-	var skyMaterial = new THREE.MeshFaceMaterial( materialArray );
+	//var skyMaterial = new THREE.MeshFaceMaterial( materialArray );
+	  var skyMaterial = [                           materialArray ];
 	var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
 	scene.add( skyBox );
 	
@@ -122,17 +135,38 @@ function init()
 	houseContainer = new THREE.Group();
 
     // loader to load in house model
-    var loader = new THREE.OBJMTLLoader();
-	loader.load('model/house2.obj','model/house2.mtl',function(object){
-	    object.position.x = -10;
-		object.castShadow = true;
-		object.traverse(function(node){
-				if (node.material){
-					node.material.side = THREE.DoubleSide;					}
-		});
-		houseContainer.add(object);
-		scene.add(houseContainer);
-	});
+    
+    var loader = new MTLLoader();
+    loader.setPath('model/');
+
+    loader.load( 'house2.mtl', function( materials ) {
+
+  materials.preload();
+
+  var objLoader = new OBJLoader();
+  objLoader.setMaterials( materials );
+//objLoader.setPath( "https://threejs.org/examples/models/obj/walt/" );
+  objLoader.setPath( "model/" );
+  objLoader.load( 'house2.obj', function ( object ) {
+
+    var mesh = object;
+    mesh.position.x = -10;
+    scene.add( mesh );
+    } );
+  } );
+
+//q   https://stackoverflow.com/a/35422599/180275
+//q  var loader = new THREE.OBJMTLLoader();
+//q	loader.load('model/house2.obj','model/house2.mtl',function(object){
+//q	    object.position.x = -10;
+//q		object.castShadow = true;
+//q		object.traverse(function(node){
+//q				if (node.material){
+//q					node.material.side = THREE.DoubleSide;					}
+//q		});
+//q		houseContainer.add(object);
+//q		scene.add(houseContainer);
+//q	});
 	
 	/////////////////////////////////////////////////////////////////////////////////
 	// CREATE COLLIDABLE WALLS    ///////////////////////////////////////////////////
@@ -141,20 +175,21 @@ function init()
 	//OUTER WALLS
 	//////////////////////////////////////////////////////////////
 	// MATERIAL FOR ALL COLLISION WALLS
-	material1 = new THREE.MeshPhongMaterial( {transparent: true, side: THREE.DoubleSide} );
+	var material1 = new THREE.MeshPhongMaterial( {transparent: true, side: THREE.DoubleSide} );
 	
 	// Create collision wall right kitchen
-	geometry1 = new THREE.PlaneBufferGeometry( 115,10 );
+//	geometry1 = new THREE.PlaneGeometry( 115,10 );
+	var geometry1 = new THREE.PlaneGeometry( 115,10 );
 	material1.opacity = 0;
-	wall1 = new THREE.Mesh( geometry1, material1 );
+	var wall1 = new THREE.Mesh( geometry1, material1 );
 	wall1.position.set(15, 17, 28);
 	scene.add( wall1 );
 	// add wall to collidable objects list
 	collisionList.push(wall1);
 	
 	// Create collision wall behind couch
-	geometry2 = new THREE.PlaneBufferGeometry( 187,10 );
-	wall2 = new THREE.Mesh( geometry2, material1 );
+	var geometry2 = new THREE.PlaneGeometry( 187,10 );
+	var wall2 = new THREE.Mesh( geometry2, material1 );
 	wall2.position.set(106, 17, -40);
 	wall2.rotation.y = 1.57
 	scene.add( wall2 );
@@ -162,16 +197,16 @@ function init()
 	collisionList.push(wall2);	
 	
 	//Create collision wall for bedroom/dining room
-	geometry3 = new THREE.PlaneBufferGeometry( 153,10 );
-	wall3 = new THREE.Mesh( geometry3, material1 );
+	var geometry3 = new THREE.PlaneGeometry( 153,10 );
+	var wall3 = new THREE.Mesh( geometry3, material1 );
 	wall3.position.set(35, 17, -131);
 	scene.add( wall3 );
 	// add wall to collidable objects list
 	collisionList.push(wall3);	
 	
 	// Create collision wall for kitchen and dining room
-	geometry4 = new THREE.PlaneBufferGeometry( 160,10 );
-	wall4 = new THREE.Mesh( geometry4, material1 );
+	var geometry4 = new THREE.PlaneGeometry( 160,10 );
+	var wall4 = new THREE.Mesh( geometry4, material1 );
 	wall4.position.set(-40, 17, -50);
 	wall4.rotation.y = 1.57
 	scene.add( wall4 );
@@ -183,11 +218,11 @@ function init()
 	//////////////////////////////////////////////////////////////
 	
 	// Create collision walls between bedroom and dining room
-	geometry5 = new THREE.PlaneBufferGeometry( 70,10 );
-	wall5 = new THREE.Mesh( geometry5, material1 );
+	var geometry5 = new THREE.PlaneGeometry( 70,10 );
+	var wall5 = new THREE.Mesh( geometry5, material1 );
 	wall5.position.set(20, 17, -100);
 	wall5.rotation.y = 1.57
-	wall6 = new THREE.Mesh( geometry5, material1 );
+	var wall6 = new THREE.Mesh( geometry5, material1 );
 	wall6.position.set(15, 17, -100);
 	wall6.rotation.y = 1.57
 	scene.add( wall5 );
@@ -197,8 +232,8 @@ function init()
 	collisionList.push(wall5);
 	
 	// Create collision walls between kitchen and bathroom
-	geometry7 = new THREE.PlaneBufferGeometry( 43,10 );
-	wall7 = new THREE.Mesh( geometry7, material1 );
+	var geometry7 = new THREE.PlaneGeometry( 43,10 );
+	var wall7 = new THREE.Mesh( geometry7, material1 );
 	wall7.position.set(17, 17, -17);
 	wall7.rotation.y = 1.57
 	wall8 = new THREE.Mesh( geometry7, material1 );
@@ -211,11 +246,11 @@ function init()
 	collisionList.push(wall8);
 	
 	// Create collision walls between living room and bathroom
-	geometry7 = new THREE.PlaneBufferGeometry( 43,10 );
+	var geometry7 = new THREE.PlaneGeometry( 43,10 );
 	wall7 = new THREE.Mesh( geometry7, material1 );
 	wall7.position.set(49, 17, -17);
 	wall7.rotation.y = 1.57
-	wall8 = new THREE.Mesh( geometry7, material1 );
+	var wall8 = new THREE.Mesh( geometry7, material1 );
 	wall8.position.set(44, 17, -17);
 	wall8.rotation.y = 1.57
 	scene.add( wall7 );
@@ -225,10 +260,10 @@ function init()
 	collisionList.push(wall8);
 	
 	// Create collision walls between hall1 and bathroom
-	geometry9 = new THREE.PlaneBufferGeometry( 15,10 );
-	wall9 = new THREE.Mesh( geometry9, material1 );
+	var geometry9 = new THREE.PlaneGeometry( 15,10 );
+	var wall9 = new THREE.Mesh( geometry9, material1 );
 	wall9.position.set(22, 17, -38);
-	wall10 = new THREE.Mesh( geometry9, material1 );
+	var wall10 = new THREE.Mesh( geometry9, material1 );
 	wall10.position.set(22, 17, -35);
 	scene.add( wall9 );
 	scene.add( wall10 );
@@ -238,10 +273,10 @@ function init()
 
 	
 	// Create collision walls between bedroom and living room
-	geometry11 = new THREE.PlaneBufferGeometry( 62,10 );
-	wall11 = new THREE.Mesh( geometry11, material1 );
+	var geometry11 = new THREE.PlaneGeometry( 62,10 );
+	var wall11 = new THREE.Mesh( geometry11, material1 );
 	wall11.position.set(48, 17, -64);
-	wall12 = new THREE.Mesh( geometry11, material1 );
+	var wall12 = new THREE.Mesh( geometry11, material1 );
 	wall12.position.set(48, 17, -68);
 	scene.add( wall11 );
 	scene.add( wall12 );
@@ -250,10 +285,10 @@ function init()
 	collisionList.push(wall12);
 	
 	// Create collision walls between hall2 and bathroom
-	geometry13 = new THREE.PlaneBufferGeometry( 33,10 );
-	wall13 = new THREE.Mesh( geometry13, material1 );
+	var geometry13 = new THREE.PlaneGeometry( 33,10 );
+	var wall13 = new THREE.Mesh( geometry13, material1 );
 	wall13.position.set(32, 17, 7);
-	wall14 = new THREE.Mesh( geometry13, material1 );
+	var wall14 = new THREE.Mesh( geometry13, material1 );
 	wall14.position.set(32, 17, 4);
 	scene.add( wall13 );
 	scene.add( wall14 );
@@ -262,10 +297,10 @@ function init()
 	collisionList.push(wall14);
 	
 	// Create collision walls between dining and kitchen
-	geometry15 = new THREE.PlaneBufferGeometry( 31,10 );
-	wall15 = new THREE.Mesh( geometry15, material1 );
+	var geometry15 = new THREE.PlaneGeometry( 31,10 );
+	var wall15 = new THREE.Mesh( geometry15, material1 );
 	wall15.position.set(-25, 17, -47);
-	wall16 = new THREE.Mesh( geometry15, material1 );
+	var wall16 = new THREE.Mesh( geometry15, material1 );
 	wall16.position.set(-25, 17, -50);
 	scene.add( wall15 );
 	scene.add( wall16 );
@@ -274,8 +309,8 @@ function init()
 	collisionList.push(wall16);
 	
 	// Create collision wall at enterence
-	geometry17 = new THREE.PlaneBufferGeometry( 25,10 );
-	wall17 = new THREE.Mesh( geometry17, material1 );
+	var geometry17 = new THREE.PlaneGeometry( 25,10 );
+	var wall17 = new THREE.Mesh( geometry17, material1 );
 	wall17.position.set(74, 17, 43);
 	wall17.rotation.y = 1.57
 	scene.add( wall17 );
@@ -287,21 +322,34 @@ function init()
 	
 	
 	// Initialize floor textures
-	textureBed = THREE.ImageUtils.loadTexture( "texture/floor3.jpg" );  
+//	textureBed = THREE.ImageUtils.loadTexture( "texture/floor3.jpg" );  
+	var textureBed = new THREE.TextureLoader().load( "texture/floor3.jpg" );  
 	setFloorTextureProperties(textureBed);
-	textureBath = THREE.ImageUtils.loadTexture( "texture/floor2.jpg" ); 
-	setFloorTextureProperties(textureBath);
-	textureKitchen = THREE.ImageUtils.loadTexture( "texture/floor1.jpg" ); 
-	setFloorTextureProperties(textureKitchen);
-	textureLiving = THREE.ImageUtils.loadTexture( "texture/floor.jpg" ); 
-	setFloorTextureProperties(textureLiving);
-	textureDining = THREE.ImageUtils.loadTexture( "texture/floor4.jpg" ); 
-	setFloorTextureProperties(textureDining);
-	textureHall1 = THREE.ImageUtils.loadTexture( "texture/floor2.jpg" ); 
-	setFloorTextureProperties(textureHall1);
-	textureHall2 = THREE.ImageUtils.loadTexture( "texture/floor1.jpg" );
+	//  textureBath = THREE.ImageUtils.loadTexture( "texture/floor2.jpg" ); 
+	var textureBath = new THREE.TextureLoader().load( "texture/floor2.jpg" ); 
+	//  setFloorTextureProperties(textureBath);
+	var setFloornew = new THREE.TextureLoader().load(textureBath);
+	//  textureKitchen = THREE.ImageUtils.loadTexture( "texture/floor1.jpg" ); 
+	var textureKitchen = new THREE.TextureLoader().load( "texture/floor1.jpg" ); 
+	//  setFloorTextureProperties(textureKitchen);
+	var setFloornew = new THREE.TextureLoader().load(textureKitchen);
+	//  textureLiving = THREE.ImageUtils.loadTexture( "texture/floor.jpg" ); 
+	var textureLiving = new THREE.TextureLoader().load( "texture/floor.jpg" ); 
+	//  setFloorTextureProperties(textureLiving);
+	var setFloornew = new THREE.TextureLoader().load(textureLiving);
+	//  textureDining = THREE.ImageUtils.loadTexture( "texture/floor4.jpg" ); 
+	var textureDining = new THREE.TextureLoader().load( "texture/floor4.jpg" ); 
+	//  setFloorTextureProperties(textureDining);
+	var setFloornew = new THREE.TextureLoader().load(textureDining);
+	//  textureHall1 = THREE.ImageUtils.loadTexture( "texture/floor2.jpg" ); 
+	var textureHall1 = new THREE.TextureLoader().load( "texture/floor2.jpg" ); 
+	//  setFloorTextureProperties(textureHall1);
+	var setFloornew = new THREE.TextureLoader().load(textureHall1);
+	//  textureHall2 = THREE.ImageUtils.loadTexture( "texture/floor1.jpg" );
+	var textureHall2 = new THREE.TextureLoader().load( "texture/floor1.jpg" );
 	setFloorTextureProperties(textureHall2);
-	textureGround = THREE.ImageUtils.loadTexture( "texture/grass.png" );
+	//  textureGround = THREE.ImageUtils.loadTexture( "texture/grass.png" );
+	var textureGround = new THREE.TextureLoader().load( "texture/grass.png" );
 	setGroundTextureProperties(textureGround);
 	
 	
@@ -310,9 +358,9 @@ function init()
 	/////////////////////////////////////////////////////////////////////////////////////
 	
 	// Ground plane	
-	var planeGeometry = new THREE.PlaneBufferGeometry( 300, 420 );
+	var planeGeometry = new THREE.PlaneGeometry( 300, 420 );
 	var planeMaterial = new THREE.MeshLambertMaterial( {map: textureGround, side: THREE.DoubleSide} );
-	plane = new THREE.Mesh( planeGeometry, planeMaterial );
+	var plane = new THREE.Mesh( planeGeometry, planeMaterial );
 	plane.position.set(50, 0, -30);
 	plane.receiveShadow = true;
 	plane.castShadow = false;
@@ -331,7 +379,7 @@ function init()
 
 	var roofShape = new THREE.Shape( roofPts );
 	var roofGeometry = new THREE.ShapeGeometry( roofShape );
-	roofMaterial = new THREE.MeshBasicMaterial( {color: 0xd3d3d3, side: 
+	var roofMaterial = new THREE.MeshBasicMaterial( {color: 0xd3d3d3, side: 
 	THREE.DoubleSide, transparent: true} );
 	var roof = new THREE.Mesh( roofGeometry, roofMaterial );
 	roof.position.set( -44,25.2,-134 );
@@ -391,7 +439,7 @@ function init()
 	targetList.push(bathroomPlane);
 	
 	// Bathroom mirror
-	var bathMirGeom = new THREE.PlaneBufferGeometry(6.5, 8.9)
+	var bathMirGeom = new THREE.PlaneGeometry(6.5, 8.9)
 	bathMirCubeCamera = new THREE.CubeCamera( .1, 200, 512 );
 	scene.add( bathMirCubeCamera );
 	// Map the mirrorcamera to the plane
@@ -488,13 +536,13 @@ function init()
 	myMaterial.side = THREE.DoubleSide;
 
 	// Add rainbow wall color plane (mirror side)
-	geometry18 = new THREE.PlaneBufferGeometry( 64,25 );
-	wallShade = new THREE.Mesh( geometry18, myMaterial );
+	var geometry18 = new THREE.PlaneGeometry( 64,25 );
+	var wallShade = new THREE.Mesh( geometry18, myMaterial );
 	wallShade.position.set(48, 13, -66.8);
 	scene.add(wallShade);
 	// Add rainbow wall color plane (closet side)
-	geometry19 = new THREE.PlaneBufferGeometry( 67,25 );
-	wallShade2 = new THREE.Mesh( geometry19, myMaterial );
+	var geometry19 = new THREE.PlaneGeometry( 67,25 );
+	var wallShade2 = new THREE.Mesh( geometry19, myMaterial );
 	wallShade2.rotation.y = 1.57;
 	wallShade2.position.set(106.28, 13, -99.5);
 	scene.add(wallShade2);
@@ -502,7 +550,7 @@ function init()
 	
 	
 	// Bedroom mirror
-	var bedMirGeom = new THREE.PlaneBufferGeometry(12, 19)
+	var bedMirGeom = new THREE.PlaneGeometry(12, 19)
 	bedMirCubeCamera = new THREE.CubeCamera( .1, 400, 512 );
 	scene.add( bedMirCubeCamera );
 	var bedMirCubeMat = new THREE.MeshBasicMaterial( { envMap: bedMirCubeCamera.renderTarget } );
@@ -531,7 +579,7 @@ function init()
 	var hall1Geometry = new THREE.ShapeGeometry( hall1Shape );
 	var hall1Material = new THREE.MeshLambertMaterial( {map: textureHall1, side: 
 	THREE.DoubleSide} );
-	hall1Plane = new THREE.Mesh( hall1Geometry, hall1Material );
+	var hall1Plane = new THREE.Mesh( hall1Geometry, hall1Material );
 	// Set position and rotate to be flat against ground
 	hall1Plane.position.set( 15.5, .4, -67 );
 	hall1Plane.rotation.x = 1.57;
@@ -552,7 +600,7 @@ function init()
 	var hall2Geometry = new THREE.ShapeGeometry( hall2Shape );
 	var hall2Material = new THREE.MeshLambertMaterial( {map: textureHall2, side: 
 	THREE.DoubleSide} );
-	hall2Plane = new THREE.Mesh( hall2Geometry, hall2Material );
+	var hall2Plane = new THREE.Mesh( hall2Geometry, hall2Material );
 	// Set position and rotate to be flat against ground
 	hall2Plane.position.set( 15, .4, 5 );
 	hall2Plane.rotation.x = 1.57;
@@ -575,12 +623,12 @@ function init()
 	canvas1 = document.createElement('canvas');
     
 	// canvas contents will be used for a texture
-	textureC = new THREE.Texture(canvas1) 
+	var textureC = new THREE.Texture(canvas1) 
 	textureC.needsUpdate = true;
 	
 	
 	var spriteMaterial = new THREE.SpriteMaterial( { map: textureC, useScreenCoordinates: true} );
-	sprite1 = new THREE.Sprite( spriteMaterial );
+	var sprite1 = new THREE.Sprite( spriteMaterial );
 	sprite1.scale.set(200,100,1.0);
 	scene.add( sprite1 );	
 	
